@@ -116,7 +116,7 @@ class VGG(Model):
         model.add(Flatten())
         for i in range(2):
             model.add(Model.Dense(4096, name='fc{}'.format(6+i)))
-            model.add(Dropout(0.5))
+            model.add(Dropout(0.5, name='dropout{}'.format(6+i)))
         model.add(Model.Dense(1000, 'softmax', name='fc8'))
         return model
 
@@ -178,8 +178,9 @@ class ResNet(Model):
 
     @staticmethod
     def conv_block(input_, num_filters, kernel, strides=(1, 1), padding='valid', activation='relu', name=None):
-        x = Conv2D(num_filters, kernel, strides=strides, padding=padding, use_bias=False, name=name + '/conv')(input_)
-        x = BatchNormalization(scale=False, name=name + '/bn')(x)
+        x = Conv2D(num_filters, kernel, strides=strides, padding=padding, activation=None,
+                   use_bias=False, name=name + '/conv')(input_)
+        x = BatchNormalization(name=name + '/bn')(x)
         if activation is not None:
             x = Activation(activation=activation, name=name + '/' + activation)(x)
         return x

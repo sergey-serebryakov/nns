@@ -15,6 +15,7 @@
 import tensorflow as tf
 
 
+# noinspection PyPep8Naming
 class Model(object):
     """ A base class for all NN models. """
     def __init__(self, name):
@@ -26,8 +27,10 @@ class Model(object):
 
     @staticmethod
     def Dense(size, activation='relu', **kwargs):
+        # noinspection PyUnresolvedReferences
         return tf.keras.layers.Dense(size, activation=activation, **kwargs)
 
     @staticmethod
     def Input(shape, name='input'):
+        # noinspection PyUnresolvedReferences
         return tf.keras.layers.Input(shape, name=name)
