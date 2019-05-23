@@ -21,7 +21,7 @@ from tensorflow.python.keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2
 from tensorflow.python.keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
 from tensorflow.python.keras.layers import AveragePooling1D, AveragePooling2D, AveragePooling3D
 from tensorflow.python.keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D
-from tensorflow.python.keras.layers import Flatten, Reshape, RepeatVector, Lambda
+from tensorflow.python.keras.layers import Flatten, Reshape, RepeatVector, Lambda, Permute
 from tensorflow.python.keras.layers import Activation, LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU
 from tensorflow.python.keras.layers import Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate      # no Dot
 from tensorflow.python.keras.layers import UpSampling1D, UpSampling2D, UpSampling3D
@@ -105,7 +105,7 @@ class ModelSummary(object):
                       GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D,
                       AveragePooling1D, AveragePooling2D, AveragePooling3D,
                       MaxPooling1D, MaxPooling2D, MaxPooling3D,
-                      Flatten, Reshape, RepeatVector, Lambda,
+                      Flatten, Reshape, RepeatVector, Lambda, Permute,
                       Activation, LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU,
                       Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate,  # without Dot
                       UpSampling1D, UpSampling2D, UpSampling3D,
