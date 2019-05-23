@@ -20,7 +20,8 @@ The `nns` (Neural Network Summary) package implements a simple class `ModelSumma
 
 
 The class `ModelSummary` computes FLOPs by iterating over neural network layers. A model itself is defined as Keras model. Only those layers that are supported are taken into account, so, make sure your model does not contain non-supported compute intensive layers. The class reports approximate FLOPs count for one instance (batch size is 1). The following layers are supported (bias is not taken into account):
-  
+
+## Operators  
 ### Dense  
 `Forward pass`  
     1. Matrix-matrix multiply: Y = X * W, FLOPs = W.nrows * W.ncols
@@ -52,7 +53,7 @@ Moreover, _FLOPs(LSTM) ~ 4 * FLOPs(RNN)_ and _FLOPs(GRU) ~ 3 * FLOPs(RNN)_
 ### TimeDistributed
 Time distributed layer supports `Dense`, `Conv2D` and `Conv2DTranspose` layers. Number of FLOPs is multiplied by a sequence length. Memory requirements are computed based on memory of a wrapped layer times number of time steps.
 
-# Examples 
+## Examples 
 Examples are in [notebooks](./notebooks) folder. Before, install Python virtual enviroment:
 ```bash
 virtualenv -p python3 ./.tf2
@@ -60,3 +61,6 @@ source ./.tf2/bin/activate
 pip install -r ./requirements.txt
 jupyter notebook
 ```
+
+## License
+[Apache License 2.0](./LICENSE.md)
