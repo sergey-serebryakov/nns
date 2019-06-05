@@ -53,12 +53,19 @@ def reset_keras(model):
     backend.set_session(Session(config=ConfigProto()))
 
 
-def printable_dataframe(data):
-    """ Refactor this somehow. """
-    column_oder = ['name', 'input_shape', 'num_parameters', 'param_memory', 'flops', 'activation_memory']
+def printable_dataframe(data, ignore_phase=True):
+    """ Print performance results using pandas data frames.
+        TODO: Re-write me.
+    """
     columns = {'name': 'Model', 'input_shape': 'Input shape', 'num_parameters': '#Parameters',
                'param_memory': 'Model size (MB) FP32', 'flops': 'GFLOPs (multiply-add)',
                'activation_memory': 'Activation size (MB) FP32'}
+    column_oder = ['name', 'input_shape', 'num_parameters', 'param_memory', 'flops', 'activation_memory']
+
+    if not ignore_phase:
+        column_oder.insert(1, 'phase')
+        columns['phase'] = 'Phase'
+
     df = pd.DataFrame(data, columns=column_oder)
     df.rename(columns=columns, inplace=True)
     return df
