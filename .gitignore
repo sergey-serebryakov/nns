@@ -1,3 +1,4 @@
 **/*.pyc
 **/*.bak
 __pycache__
+.idea/
