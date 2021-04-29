@@ -102,3 +102,8 @@ jupyter notebook
 
 ## Questions?
 [Contact me](serebryakov.sergey@gmail.com).
+
+## References
+1. [Convnet: Implementing Convolution Layer with Numpy](https://wiseodd.github.io/techblog/2016/07/16/convnet-conv-layer/)
+2. [cuDNN: Efficient Primitives for Deep Learning](https://arxiv.org/pdf/1410.0759.pdf)
+3. [Memory usage and computational considerations](http://imatge-upc.github.io/telecombcn-2016-dlcv/slides/D2L1-memory.pdf)
