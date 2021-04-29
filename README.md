@@ -1,3 +1,5 @@
+> __This repository moved to a new location - [https://github.com/mlperf-deepts/nns](https://github.com/mlperf-deepts/nns)__
+
 # Neural network runtime characteristics - FLOPS and memory requirements
 
 
@@ -96,6 +98,7 @@ jupyter notebook
 
 ## License
 [Apache License 2.0](./LICENSE.md)
+
 
 ## Questions?
 [Contact me](serebryakov.sergey@gmail.com).
