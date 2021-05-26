@@ -18,7 +18,7 @@ The `nns` (Neural Network Summary) package implements a simple class `ModelSumma
  
  While these estimations are not accurate for computing, for instance, batch times, they nevertheless can be used for comparing different models with each other.  
 
-> Assumption: computations in deep NNs are dominated by multiply-adds in dense and convolutional layers. Other operators such as non-linearity, dropout, normalization and others are ignored. The description on this page may be outdated, so, study the source files, in particular, [nns.py](https://github.com/sergey-serebryakov/nns/blob/master/python/nns/nns.py).
+> Assumption: computations in deep NNs are dominated by multiply-adds in dense and convolutional layers. Other operators such as non-linearity, dropout, normalization and others are ignored. The description on this page may be outdated, so, study the source files, in particular, [nns.py](https://github.com/mlperf-deepts/nns/blob/master/nns/nns.py).
 
 
 The class `ModelSummary` computes FLOPs by iterating over neural network layers. A model itself is defined as Keras model. Only those layers that are supported are taken into account, so, make sure your model does not contain non-supported compute intensive layers. The class reports approximate FLOPs count for one input instance (batch size is 1). The following layers are supported (bias is not taken into account):
@@ -80,18 +80,19 @@ Memory requirements are computed based on the size of an output tensor plus weig
 ### RNN / Bidirectional layers
 Bidirectional models double number of FLOPs. The following cells are supported: `SimpleRNNCell`, `LSTMCell` and `GRUCell`. RNNs use matrix multiply, so forward/backward FLOPs are similar to those for `Dense` layer.  
 Also: `FLOPs(LSTM) ~ 4 * FLOPs(RNN)` and `FLOPs(GRU) ~ 3 * FLOPs(RNN)`.
-1. `RNN` Two matrix multiplications for each time step: _hidden[t] = x[t]*Wxh + hidden[t-1]*Whh_. Memory estimation algorithm is [here](https://github.com/sergey-serebryakov/nns/blob/master/python/nns/nns.py#L264).
-2. `LSTM` Hidden and cell sizes are equal. In total, 4 matrix multiplications with input X and 4 matrix multiplications with hidden state H. Plus a bunch of element wise multiplications, sums and activations that we do not take into account. Memory estimation is [here](https://github.com/sergey-serebryakov/nns/blob/master/python/nns/nns.py#L271).
-3. `GRU ` Update/reset/hidden, each has 1 matrix multiply with X and one with H, so in total 3 matrix multiplies with X and 3 with H. Memory estimation is [here](https://github.com/sergey-serebryakov/nns/blob/master/python/nns/nns.py#L290).
+1. `RNN` Two matrix multiplications for each time step: _hidden[t] = x[t]*Wxh + hidden[t-1]*Whh_.
+2. `LSTM` Hidden and cell sizes are equal. In total, 4 matrix multiplications with input X and 4 matrix multiplications with hidden state H. Plus a bunch of element wise multiplications, sums and activations that we do not take into account.
+3. `GRU ` Update/reset/hidden, each has 1 matrix multiply with X and one with H, so in total 3 matrix multiplies with X and 3 with H.
 
 ### TimeDistributed
-Time distributed [layer](https://keras.io/layers/wrappers/) applies a base layer to every temporal slice of an input. The base layer can be any layer described above. Number of FLOPS of the base layer is multiplied by the sequence length. Memory requirements are computed based on memory of a base layer times number of time steps. See [source code](https://github.com/sergey-serebryakov/nns/blob/master/python/nns/nns.py#L211) for more details.
+Time distributed [layer](https://keras.io/layers/wrappers/) applies a base layer to every temporal slice of an input. The base layer can be any layer described above. Number of FLOPS of the base layer is multiplied by the sequence length. Memory requirements are computed based on memory of a base layer times number of time steps.
 
 ## Examples 
 Examples are in [notebooks](./notebooks) folder. Before, install Python virtual environment:
 ```bash
 virtualenv -p python3 ./.tf2
 source ./.tf2/bin/activate
+# This will install TensorFlow, pandas and their dependencies. Jupyter needs to be installed manually.
 pip install -r ./requirements.txt
 jupyter notebook
 ```

@@ -11,26 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import tensorflow as tf
+
+__ALL__ = ['Model']
 
 
 # noinspection PyPep8Naming
 class Model(object):
     """ A base class for all NN models. """
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
 
-    def create(self):
+    def create(self) -> tf.keras.models.Model:
         """ This method must return an instance of `tensorflow.python.keras.models.Model`. """
-        raise NotImplementedError('Implement me in a derived class.')
-
-    @staticmethod
-    def Dense(size, activation='relu', **kwargs):
-        # noinspection PyUnresolvedReferences
-        return tf.keras.layers.Dense(size, activation=activation, **kwargs)
-
-    @staticmethod
-    def Input(shape, name='input'):
-        # noinspection PyUnresolvedReferences
-        return tf.keras.layers.Input(shape, name=name)
+        raise NotImplementedError()

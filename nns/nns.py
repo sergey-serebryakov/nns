@@ -11,49 +11,52 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import gc
+import typing
 import numpy as np
 import pandas as pd
-import copy
-from tensorflow.python.keras.layers import Dense, Conv1D, Conv2D, Conv2DTranspose, Dropout, BatchNormalization
-from tensorflow.python.keras.layers import RNN, SimpleRNNCell, GRUCell, LSTMCell, Bidirectional, TimeDistributed
-from tensorflow.python.keras.layers import GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalMaxPooling3D
-from tensorflow.python.keras.layers import GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D
-from tensorflow.python.keras.layers import AveragePooling1D, AveragePooling2D, AveragePooling3D
-from tensorflow.python.keras.layers import MaxPooling1D, MaxPooling2D, MaxPooling3D
-from tensorflow.python.keras.layers import Flatten, Reshape, RepeatVector, Lambda, Permute
-from tensorflow.python.keras.layers import Activation, LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU
-from tensorflow.python.keras.layers import Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate      # no Dot
-from tensorflow.python.keras.layers import UpSampling1D, UpSampling2D, UpSampling3D
-from tensorflow.python.keras.layers import ZeroPadding1D, ZeroPadding2D, ZeroPadding3D
-from tensorflow.python.keras.layers import Layer
-from tensorflow.python.keras.activations import linear
+import tensorflow as tf
+from nns.model import Model as NNSModel
+from tensorflow.keras.layers import (Dense, Conv1D, Conv2D, Conv2DTranspose, Dropout, BatchNormalization,
+                                     RNN, SimpleRNNCell, GRUCell, LSTMCell, Bidirectional, TimeDistributed,
+                                     GlobalMaxPooling1D, GlobalMaxPooling2D, GlobalMaxPooling3D,
+                                     GlobalAveragePooling1D, GlobalAveragePooling2D, GlobalAveragePooling3D,
+                                     AveragePooling1D, AveragePooling2D, AveragePooling3D,
+                                     MaxPooling1D, MaxPooling2D, MaxPooling3D,
+                                     Flatten, Reshape, RepeatVector, Lambda, Permute,
+                                     Activation, LeakyReLU, PReLU, ELU, ThresholdedReLU, Softmax, ReLU,
+                                     Add, Subtract, Multiply, Average, Maximum, Minimum, Concatenate,      # no Dot
+                                     UpSampling1D, UpSampling2D, UpSampling3D,
+                                     ZeroPadding1D, ZeroPadding2D, ZeroPadding3D,
+                                     Layer)
+# TODO: Fixme. Why does this cell show up in recurrent models?
+from tensorflow.python.keras.layers.recurrent import LSTMCell as LSTMCellV1
+from tensorflow.keras.activations import linear
+# from tensorflow.compat.v1 import ConfigProto, Session
+from tensorflow.keras.models import Model as KerasModel
 
-from tensorflow.python.keras import backend
-from tensorflow.python import ConfigProto, Session
-import gc
-
-from tensorflow.python.keras import models
-from .model import Model
+__ALL__ = ['reset_keras', 'printable_dataframe', 'Summary', 'ModelSummary', 'estimate']
 
 
-def reset_keras(model):
+def reset_keras(model) -> None:
     """Reset Keras Session.
         https://forums.fast.ai/t/how-could-i-release-gpu-memory-of-keras/2023/18
         https://github.com/keras-team/keras/issues/12625
     """
-    sess = backend.get_session()
-    backend.clear_session()
-    sess.close()
+    tf.keras.backend.clear_session()
+    # sess = backend.get_session()
+    # backend.clear_session()
+    # sess.close()
     try:
+        # TODO: this is not working since callee still holds the reference
         del model
     except:
         pass
     gc.collect()
-    backend.set_session(Session(config=ConfigProto()))
+    # backend.set_session(Session(config=ConfigProto()))
 
 
-def printable_dataframe(data, ignore_phase=True):
+def printable_dataframe(data: typing.List[typing.Mapping], ignore_phase: bool = True) -> pd.DataFrame:
     """ Print performance results using pandas data frames.
         TODO: Re-write me.
     """
@@ -72,14 +75,15 @@ def printable_dataframe(data, ignore_phase=True):
 
 
 class Summary(object):
-    def __init__(self, **kwargs):
+    """ Layer summary. """
+    def __init__(self, **kwargs) -> None:
         self.name = kwargs.get('name', '')
         self.out_shape = kwargs.get('out_shape', None)
         self.num_params = kwargs.get('num_params', 0)
         self.flops = kwargs.get('flops', 0)
         self.num_activations = kwargs.get('num_activations', 0)
 
-    def to_dict(self, **overrides):
+    def to_dict(self, **overrides) -> dict:
         dict_repr = {'name': self.name, 'out_shape': self.out_shape, 'flops': self.flops,
                      'num_params': self.num_params, 'num_activations': self.num_activations}
         dict_repr.update(overrides)
@@ -118,18 +122,19 @@ class ModelSummary(object):
                       UpSampling1D, UpSampling2D, UpSampling3D,
                       ZeroPadding1D, ZeroPadding2D, ZeroPadding3D)
 
-    def debug(self, message, *kwargs):
+    def debug(self, message: str, *kwargs) -> None:
         if self.verbose:
             print(message.format(*kwargs))
 
-    def add(self, summary):
+    def add(self, summary: Summary) -> None:
         if not isinstance(summary, Summary):
             raise ValueError("Invalid argument type: '{}' (must be 'Summary').".format(type(summary)))
         self.layers.append(summary)
         self.model.flops += summary.flops
         self.model.num_activations += summary.num_activations
 
-    def add_layer(self, layer, flops=0, repeat_count=1, num_params=None, output_shape=None):
+    def add_layer(self, layer: Layer, flops: float = 0, repeat_count: int = 1, num_params: typing.Optional[int] = None,
+                  output_shape: typing.Optional[typing.Tuple] = None) -> None:
         if not isinstance(layer, Layer):
             raise ValueError("Invalid argument type: '{}' (must be 'Layer').".format(type(layer)))
         try:
@@ -145,12 +150,13 @@ class ModelSummary(object):
         self.add(Summary(name=layer.name, out_shape=out_shape, flops=repeat_count*flops,
                          num_params=num_params, num_activations=num_activations))
 
-    def add_input_layer(self, output_shape):
+    def add_input_layer(self, output_shape: typing.Tuple) -> None:
         self.debug("Found supported layer: type=Input, shape={}.", output_shape)
         output_shape = output_shape[1:]
         self.add(Summary(name='input', out_shape=output_shape, num_activations=np.prod(output_shape)))
 
-    def add_conv_layer(self, layer, repeat_count=1, output_shape=None):
+    def add_conv_layer(self, layer: Layer, repeat_count: int = 1,
+                       output_shape: typing.Optional[typing.Tuple] = None) -> None:
         """      WeightsShape                                      OutputShape
         Conv1D   [FilterDim, InChannels, OutChannels]              [Batch, Length, OutChannels]
         Conv2D   [FilterDim, FilterDim, InChannels, OutChannels]   [Batch, Height, Width, OutChannels]
@@ -160,7 +166,7 @@ class ModelSummary(object):
         flops = filter_flops * np.prod(output_shape[1:])     # First dim is batch dim
         self.add_layer(layer, flops=flops, repeat_count=repeat_count, output_shape=output_shape)
 
-    def detailed_summary(self, **column_scalers):
+    def detailed_summary(self, **column_scalers) -> pd.DataFrame:
         df = pd.DataFrame(
             [layer.to_dict() for layer in self.layers] + [self.model.to_dict(name='TOTAL')],
             columns=['name', 'out_shape', 'flops', 'num_params', 'num_activations']
@@ -177,7 +183,8 @@ class ModelSummary(object):
                 df.rename(columns={column: '{} ({})'.format(column, ModelSummary.UNITS[scaler_unit])}, inplace=True)
         return df
 
-    def summary(self, phase='inference', batch_size=1, flops_units='G', memory_units='M'):
+    def summary(self, phase: str = 'inference', batch_size: int = 1, flops_units: str = 'G',
+                memory_units: str = 'M') -> dict:
         flops_units = flops_units or 'B'
         memory_units = memory_units or 'B'
         flops = batch_size * self.model.flops / ModelSummary.SCALERS[flops_units]
@@ -201,7 +208,7 @@ class ModelSummary(object):
                 'param_memory': param_memory, 'activation_memory': activation_memory, 'input_shape': self.input_shape,
                 'num_parameters': self.model.num_params}
 
-    def __init__(self, model, verbose=False):
+    def __init__(self, model, verbose: bool = False) -> None:
         """
             TODO: What if user reuses layers with functional API?
         """
@@ -241,7 +248,7 @@ class ModelSummary(object):
                 # Keep it here
                 print("Layer not recognized (type={}, name={})".format(str(type(layer)), layer.name))
 
-    def add_rnn_layer(self, layer):
+    def add_rnn_layer(self, layer) -> None:
         # TODO: Add memory estimations. What's the best conservative strategy?
         num_steps = layer.input_shape[1]  # Number of time steps (sequence length).
         input_size = layer.input_shape[2]  # Number of input features.
@@ -274,7 +281,7 @@ class ModelSummary(object):
             #    c.  output = activation(output)
             rnn_cell = 'SimpleRNN'
             num_cell_activations = (2 if layer.activation == linear else 3) * output_size
-        elif isinstance(layer.cell, LSTMCell):
+        elif isinstance(layer.cell, (LSTMCell, LSTMCellV1)):
             # 1. Assumed implementation (all output shapes below: [output_size,]):
             #    x_i = x*W_xi + b_xi                             1
             #    x_f = x*W_xf + b_xf                             1
@@ -327,12 +334,13 @@ class ModelSummary(object):
                   "output_size={}.".format(rnn_cell, num_steps, input_size, output_size))
 
 
-def estimate(model, inference, training):
+def estimate(model: typing.Union[NNSModel, KerasModel],
+             inference: typing.List[typing.Mapping], training: typing.List[typing.Mapping]) -> pd.DataFrame:
     """ Helper function. """
-    if isinstance(model, Model):
+    if isinstance(model, NNSModel):
         model = model.create()
-    if not isinstance(model, models.Model):
-        raise ValueError('Unknown model format')
+    if not isinstance(model, KerasModel):
+        raise ValueError(f'Unknown model type {type(model)}')
 
     summary = ModelSummary(model)
     reset_keras(model)
@@ -342,43 +350,3 @@ def estimate(model, inference, training):
     if training is not None:
         training.append(summary.summary(phase='training'))
     return summary.detailed_summary(flops='G', params_mem='M', activations_mem='M')
-
-
-class ModelTest:
-    """ A base class to test model summary class.
-
-    Child classes derive from TestCase and ModelTest. Them unittest framework calls test_model.
-    """
-    PARAMS = {'name': 0, 'out_shape': 1, 'flops': 2, 'num_params': 3, 'num_activations': 4,
-              'params_mem': 5, 'activations_mem': 6}
-
-    def verify(self, actual_layer, expected_layer):
-        """
-        Verify that computed layer parameters match expected values.
-
-        :param actual_layer: pandas row with actual (computed) layer parameters
-        :param expected_layer: python list with expected (true) layer parameters.
-        """
-        for param_name in ModelTest.PARAMS:
-            index = ModelTest.PARAMS[param_name]
-            # noinspection PyUnresolvedReferences
-            self.assertEqual(expected_layer[index], actual_layer[param_name],
-                             "Failed to match parameter '{}' for layer '{}'".format(param_name, actual_layer['name']))
-
-    def test_model(self):
-        """ Test model and model summary object.
-        """
-        # Update table of expected layers. Add memory requirements for parameters and activations.
-        # noinspection PyUnresolvedReferences
-        expected_layers = copy.deepcopy(self.EXPECTED_LAYERS)
-        for i in range(len(expected_layers)):
-            expected_layers[i].append(expected_layers[i][ModelTest.PARAMS['num_params']] * 4)
-            expected_layers[i].append(expected_layers[i][ModelTest.PARAMS['num_activations']] * 4)
-
-        # noinspection PyUnresolvedReferences
-        summary = ModelSummary(self.MUT.create())
-        actual_layers = summary.detailed_summary()
-        print(actual_layers)
-
-        for i in range(len(expected_layers)):
-            self.verify(actual_layers.iloc[i], expected_layers[i])
